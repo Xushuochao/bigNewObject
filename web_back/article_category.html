@@ -2,7 +2,7 @@
  * @Description: In User Settings Edis
  * @Author: your name
  * @Date: 2019-08-13 15:42:53
- * @LastEditTime: 2019-08-15 20:37:40
+ * @LastEditTime: 2019-08-16 16:16:19
  * @LastEditors: Please set LastEditors
  -->
 <!DOCTYPE html>
@@ -37,50 +37,12 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td>未分类</td>
-                        <td>uncategorized</td>
-                        <td class="text-center">
-                            <a href="javascript:editTr({&quot;id&quot;:&quot;1&quot;,&quot;slug&quot;:&quot;uncategorized&quot;,&quot;name&quot;:&quot;未分类&quot;});"
-                                class="btn btn-info btn-xs">编辑</a>
-                            <a href="javascript:deleteTr( 1 );" class="btn btn-danger btn-xs">删除</a>
-                        </td>
-                    </tr>
 
-                    <tr>
-                        <td>奇趣事</td>
-                        <td>funny</td>
-                        <td class="text-center">
-                            <a href="javascript:editTr({&quot;id&quot;:&quot;2&quot;,&quot;slug&quot;:&quot;funny&quot;,&quot;name&quot;:&quot;奇趣事&quot;});"
-                                class="btn btn-info btn-xs">编辑</a>
-                            <a href="javascript:deleteTr( 2 );" class="btn btn-danger btn-xs">删除</a>
-                        </td>
-                    </tr>
-
-                    <tr>
-                        <td>会生活</td>
-                        <td>living</td>
-                        <td class="text-center">
-                            <a href="javascript:editTr({&quot;id&quot;:&quot;3&quot;,&quot;slug&quot;:&quot;living&quot;,&quot;name&quot;:&quot;会生活&quot;});"
-                                class="btn btn-info btn-xs">编辑</a>
-                            <a href="javascript:deleteTr( 3 );" class="btn btn-danger btn-xs">删除</a>
-                        </td>
-                    </tr>
-
-                    <tr>
-                        <td>爱旅行</td>
-                        <td>travel</td>
-                        <td class="text-center">
-                            <a href="javascript:editTr({&quot;id&quot;:&quot;4&quot;,&quot;slug&quot;:&quot;travel&quot;,&quot;name&quot;:&quot;爱旅行&quot;});"
-                                class="btn btn-info btn-xs">编辑</a>
-                            <a href="javascript:deleteTr( 4 );" class="btn btn-danger btn-xs">删除</a>
-                        </td>
-                    </tr>
                 </tbody>
                 <tfoot>
                     <tr>
                         <td colspan="3" class="text-center">
-                            <a href="#" class="btn btn-success" data-toggle="modal" data-target="#addModal">新增分类</a>
+                            <a href="#" class="btn btn-success" id="addFL">新增分类</a>
                         </td>
                     </tr>
                 </tfoot>
@@ -97,13 +59,14 @@
                 </div>
                 <div class="modal-body">
                     <form>
+                        <input type="text" name="id" id="recipient-id" style="display: none">
                         <div class="form-group">
                             <label for="recipient-name" class="control-label">分类名称:</label>
-                            <input type="text" class="form-control" id="name">
+                            <input type="text" class="form-control" name="name" id="recipient-name">
                         </div>
                         <div class="form-group">
                             <label for="message-text" class="control-label">分类别名:</label>
-                            <input type="text" class="form-control" id="slug">
+                            <input type="text" class="form-control" name="slug" id="recipient-slug">
                         </div>
                     </form>
                 </div>
@@ -120,8 +83,8 @@
             <td>{{v.name}}</td>
             <td>{{v.slug}}</td>
             <td class="text-center">
-                <a href="javascript:editTr({&quot;id&quot;:&quot;1&quot;,&quot;slug&quot;:&quot;uncategorized&quot;,&quot;name&quot;:&quot;未分类&quot;});" class="btn btn-info btn-xs">编辑</a>
-                <a href="javascript:deleteTr( 1 );" data-id="{{v.id}}" class="btn btn-danger btn-xs">删除</a>
+                <a href="javascript:editTr({&quot;id&quot;:&quot;1&quot;,&quot;slug&quot;:&quot;uncategorized&quot;,&quot;name&quot;:&quot;未分类&quot;});" data-id="{{v.id}}" class="btn amend btn-info btn-xs">编辑</a>
+                <a href="javascript:deleteTr( 1 );" data-id="{{v.id}}" class="btn btn-delete btn-danger btn-xs">删除</a>
             </td>
         </tr>
         {{/each}}
@@ -133,48 +96,107 @@
         });
 
         $('#model_shutoff').click(function () {
-            alert('shutoff');
             $('#addModal').modal('hide');
         });
 
-        $('#model_add').click(function () {
-           var name = $('#name').val().trim();
-           var slug = $('#slug').val().trim();
-           $.ajax({
-           url:'http://127.0.0.1:8080/admin/category/add',
-           type:'post',
-           dataType:'json',
-           data:{
-               name:name,
-               slug:slug
-           },
-           success: function(data){
-               console.log(data);
-               if (data.code == 201){
-                   alert('新增成功')
-                   parent.window.location.reload();
-               }
-           }
-           });
-        });
 
-        $('.category_table').delegate('a', 'click', function () {
-            if ($(this).hasClass('btn-info')) {
-                $('#addModal .modal-title').html('修改分类名称');
-                $('#addModal').modal('show');
-            }
-        })
+
+
 
         $(function () {
-            $.ajax({
-            url:'http://127.0.0.1:8080/admin/category/list',
-            type:'get',
-            success: function(data){
-                var tr = template('tem_sb',data);
-                $('tbody').html(tr);
+            function getData() {
+                // 生成文章分类的请求
+                $.ajax({
+                    url: 'http://127.0.0.1:8080/admin/category/list',
+                    type: 'get',
+                    success: function (data) {
+                        var tr = template('tem_sb', data);
+                        $('tbody').html(tr);
 
+                    }
+                });
             }
+            // 页面一开始自动发送请求生成文章分类页面
+            getData();
+            //新增请求
+            $('#model_add').click(function () {
+                var name = $('#recipient-name').val().trim();
+                var slug = $('#recipient-slug').val().trim();
+                var fd = $('form').serialize();
+                if ($(this).hasClass('btn-success')) {
+                    $.ajax({
+                        url: 'http://localhost:8080/admin/category/edit',
+                        type: 'post',
+                        dataType: 'json',
+                        data: fd,
+                        success: function (data) {
+                            alert('编辑成功');
+                            getData();
+                        }
+                    });
+                } else {
+                    $.ajax({
+                        url: 'http://127.0.0.1:8080/admin/category/add',
+                        type: 'post',
+                        dataType: 'json',
+                        data: {
+                            name: name,
+                            slug: slug
+                        },
+                        success: function (data) {
+                            console.log(data);
+                            if (data.code == 201) {
+                                alert('新增成功')
+                                getData();
+                            }
+                        }
+                    });
+                }
+                $('#addModal').modal('hide');
+
             });
+
+            // 删除键的委托事件
+            $('tbody').on('click', 'a.btn-delete', function () {
+                if (confirm('你确认删除?')) {
+                    var cateId = $(this).attr('data-id');
+                    var that = $(this)
+                    $.ajax({
+                        type: 'post',
+                        url: 'http://127.0.0.1:8080/admin/category/delete',
+                        data: {
+                            id: cateId
+                        },
+                        success: function (e) {
+                            if (e.code == 204) {
+                                that.parent().parent().remove();
+                            }
+                        }
+                    })
+                }
+            })
+
+            //编辑
+            $('tbody').on('click', 'a.amend', function () {
+                $('#addModal .modal-title').html('修改分类名称');
+                $("#model_add").text('编辑').addClass('btn-success');
+                $('#addModal').modal('show');
+                var cateId = $(this).attr('data-id');
+                var cateName = $(this).parent().prev().prev().text().trim();
+                var cateSlug = $(this).parent().prev().text().trim();
+                $('#recipient-id').val(cateId);
+                $('#recipient-name').val(cateName);
+                $('#recipient-slug').val(cateSlug);
+                $('#addModal').modal('show');
+            })
+            $('#addFL').click(function () {
+                $('#addModal .modal-title').html('新增分类名称');
+                $("#model_add").text('新增').removeClass('btn-success');
+                $('#recipient-id').val('');
+                $('#recipient-name').val('');
+                $('#recipient-slug').val('');
+                $('#addModal').modal('show');
+            })
         })
     </script>
 
